@@ -22,7 +22,7 @@
 	</properties>
 
 	<dependencies>
-		<!-- Spring Web (Controladores y peticiones HTTP) -->
+		<!-- Spring Web (Controladores, REST y Servidor Web embebido) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -45,13 +45,6 @@
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
-		</dependency>
-
-		<!-- Tomcat embebido (necesario si empaquetas en WAR) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- Pruebas unitarias (incluye JUnit y utilidades de test) -->

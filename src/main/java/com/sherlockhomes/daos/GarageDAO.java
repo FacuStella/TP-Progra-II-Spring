@@ -1,19 +1,15 @@
 package com.sherlockhomes.daos;
 
-import com.sherlockhomes.daos.GerericDAO;
-import com.sherlockhomes.daos.GenericIntDAO;
 import com.sherlockhomes.models.Garage;
 import com.sherlockhomes.models.Socio;
-import java.util.ArrayList;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 
-public interface GarageDAO extends GerericDAO<Garage>,GenericIntDAO<Garage, Integer>{
-    public int ultimoGarage();
-    public ArrayList<Garage> buscarGaragePorSocio(Socio socio);
-    public boolean tieneVehiculoAsignado(int numero);
-    public boolean tienePropietario(int numero);
-    public void asignarGarageVehiculo(int garage, String patente);
-    public void quitarGarageVehiculo(int garage);
-    public void quitarVehiculoGarage(String patente);
-    public void eliminarSocio(Socio socio);
+@Repository
+public interface GarageDAO extends JpaRepository<Garage, Integer> {
+
+    // Cambiar findBySocio por findByPropietario
+    List<Garage> findByPropietario(Socio propietario);
     
 }

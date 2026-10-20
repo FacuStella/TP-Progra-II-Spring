@@ -1,17 +1,17 @@
 package com.sherlockhomes.daos;
 
-import com.sherlockhomes.daos.GerericDAO;
-import com.sherlockhomes.daos.GenericStringDAO;
 import com.sherlockhomes.models.Vehiculo;
-import com.sherlockhomes.models.Empleado;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-public interface VehiculoDAO extends GerericDAO<Vehiculo>,GenericStringDAO<Vehiculo,Integer,String> {
-    public boolean tieneGarageAsignado(String patente);
-    public boolean tieneEmpleadoAsignado(String patente);
-    public void asignarVehiculoGarage(String patente, int garage);
-    public void asignarVehiculoEmpleado(String patente, Empleado empleado);
-    public void quitarGarageVehiculo(int numero);
-    public void quitarVehiculoGarage(String patente);
-    public void quitarVehiculoEmpleado(String patente);
-    public void mostrarVehiculoGarage(Vehiculo vehiculo);
+import java.util.Optional;
+
+@Repository
+public interface VehiculoDAO extends JpaRepository<Vehiculo, String> {
+
+    @Query("SELECT v FROM Vehiculo v WHERE v.matricula = :patente")
+    Optional<Vehiculo> findByPatente(@Param("patente") String patente);
+
 }

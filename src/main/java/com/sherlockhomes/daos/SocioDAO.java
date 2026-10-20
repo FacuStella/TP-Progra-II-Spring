@@ -1,16 +1,14 @@
 package com.sherlockhomes.daos;
 
-import com.sherlockhomes.daos.GerericDAO;
-import com.sherlockhomes.daos.GenericIntDAO;
-import com.sherlockhomes.models.Vehiculo;
-import com.sherlockhomes.models.Garage;
 import com.sherlockhomes.models.Socio;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface SocioDAO extends GerericDAO<Socio>,GenericIntDAO<Socio,Integer> {
-    public void comprarGarage(int DNI, Garage garage);
-    public void asignarSocioVehiculo(int DNI, Vehiculo vehiculo);
-    public void quitarVehiculoPorPatente(String patente);
-    public void listarSocioVehiculos(Socio socio);
-    public void listarSocioGarages(Socio socio);
-    public boolean tieneGarages(Socio propietario);
+import java.util.Optional;
+
+@Repository
+public interface SocioDAO extends JpaRepository<Socio, Integer> {
+
+    // Método personalizado útil para buscar un socio por DNI en lugar de su ID de tabla
+    Optional<Socio> findByDNI(int dni);
 }
