@@ -1,89 +1,108 @@
 package com.sherlockhomes.models;
 
-import com.sherlockhomes.models.Socio;
-import java.io.Serializable;
-import java.util.Date;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 
-public class Garage implements Serializable {
-    private static final long serialVersionUID = 1L; 
-    
-    protected int numeroGarage;
-    protected double lecturaContadorLuz;
-    protected boolean mantenimientoContratado;
-    protected Vehiculo vehiculoOcupante;
-    protected Zona zona;
-    
-    protected Socio propietario;
-    protected Date fechaCompra;
-    
-    public Garage(Zona zona) {
-        this.numeroGarage = 0;
+@Entity
+@Table(name = "garages")
+public class Garage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Column(nullable = false, unique = true)
+    private Integer numero;
+
+    @Column(nullable = false)
+    private double lecturaContadorLuz;
+
+    @Column(nullable = false)
+    private boolean mantenimientoContratado;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "zona_id", nullable = false)
+    private Zona zona;
+
+    /** Propietario del garage (puede no tener). */
+    @ManyToOne
+    @JoinColumn(name = "socio_id")
+    private Socio socio;
+
+    private LocalDate fechaCompra;
+
+    public Garage() {
+    }
+
+    public Garage(Integer numero, Zona zona) {
+        this.numero = numero;
+        this.zona = zona;
         this.lecturaContadorLuz = 0;
         this.mantenimientoContratado = false;
-        this.zona = zona;
-        this.vehiculoOcupante = null;
-        this.propietario = null;
-        this.fechaCompra = null;
+    }
+
+    public boolean tienePropietario() {
+        return socio != null;
+    }
+
+    public Integer getNumero() {
+        return numero;
     }
     
-    public Garage(int numero,Zona zona) {
-        this.numeroGarage = numero;
-        this.lecturaContadorLuz = 0;
-        this.mantenimientoContratado = false;
-        this.zona = zona;
-        this.vehiculoOcupante = null;
-        this.propietario = null;
-        this.fechaCompra = null;
-    }
-    
-    public int getNumeroGarage() {
-        return numeroGarage;
+    public void setNumero(Integer numero) {
+        this.numero = numero;
     }
 
     public double getLecturaContadorLuz() {
         return lecturaContadorLuz;
     }
-    
-    public Vehiculo getVehiculoOcupante() {
-        return vehiculoOcupante;
+
+    public void setLecturaContadorLuz(double lecturaContadorLuz) {
+        this.lecturaContadorLuz = lecturaContadorLuz;
+    }
+
+    public boolean isMantenimientoContratado() {
+        return mantenimientoContratado;
+    }
+
+    public void setMantenimientoContratado(boolean mantenimientoContratado) {
+        this.mantenimientoContratado = mantenimientoContratado;
+    }
+
+    public LocalDate getFechaCompra() {
+        return fechaCompra;
+    }
+
+    public void setFechaCompra(LocalDate fechaCompra) {
+        this.fechaCompra = fechaCompra;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public Zona getZona() {
         return zona;
     }
 
-    public Socio getPropietario() {
-        return propietario;
-    }
-    
-    public Date getFechaCompra() {
-        return fechaCompra;
-    }
-    
-    public boolean isMantenimientoContratado() {
-        return mantenimientoContratado;
-    }
-    
-    public boolean tienePropietario() {
-        return (propietario != null);
-    }
-    
-     public void asignarPropietario(Socio socio) {
-        this.propietario = socio;
-        this.fechaCompra = new Date();
+    public void setZona(Zona zona) {
+        this.zona = zona;
     }
 
-    public void removerPropietario() {
-        this.propietario = null;
-        this.fechaCompra = null;
-    }
+    public Socio getSocio() {
+        return socio;
+    }  
     
-    public void asignarVehiculo(Vehiculo vehiculo) {
-        this.vehiculoOcupante = vehiculo;
-    }
-
-    public void removerVehiculo() {
-        this.vehiculoOcupante = null;
-    }
-
+    public void setSocio(Socio socio) {
+        this.socio = socio;
+    }  
 }

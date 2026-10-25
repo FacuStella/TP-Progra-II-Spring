@@ -1,40 +1,40 @@
 package com.sherlockhomes.controllers;
 
-import com.sherlockhomes.views.socio.VistaSocio;
-import com.sherlockhomes.EntradaCons;
+import com.sherlockhomes.models.Garage;
 import com.sherlockhomes.models.Socio;
-import com.sherlockhomes.SocioRepositoryFile;
+import com.sherlockhomes.models.Vehiculo;
+import com.sherlockhomes.services.SocioService;
+import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ControllerSocio implements Controller<Socio> {
-    
-    private SocioRepositoryFile asocciatedRepository;
-    private VistaSocio vistaSocio;
-    private int accion; 
-    
-    public ControllerSocio(){
-        asocciatedRepository = new SocioRepositoryFile();
-        vistaSocio = new VistaSocio();
-    }
-    
-    @Override
-    public void iniciar(Socio s){
-            do{
-                vistaSocio.menu();
-                accion = EntradaCons.ingresaInt();
-                ejecutar(s);
-            } while(accion != 0);
+/** Endpoints del socio logueado: siempre trabajan sobre sus propios datos. */
+@RestController
+@RequestMapping("/api/socio")
+public class ControllerSocio {
+
+    private final SocioService socioService;
+
+    public ControllerSocio(SocioService socioService) {
+        this.socioService = socioService;
     }
 
-    @Override
-    public void ejecutar(Socio socioAux) {
-        switch (accion) {
-            case 1 -> asocciatedRepository.listarSocioVehiculos(socioAux);
-            case 2 -> asocciatedRepository.listarSocioGarages(socioAux);
-            case 0 -> vistaSocio.salir();
-            default -> vistaSocio.noReconocida();
-        }
+    @GetMapping("/perfil")
+    public Socio verPerfil(Authentication auth) {
+        return socioService.buscarPorUsername(auth.getName());
     }
-    
 
-    
+    @GetMapping("/listarVehiculos")
+    public List<Vehiculo> listarSocioVehiculos(Authentication auth) {
+        Socio yo = socioService.buscarPorUsername(auth.getName());
+        return socioService.listarVehiculos(yo.getDni());
+    }
+
+    @GetMapping("/listarGarages")
+    public List<Garage> listarSocioGarages(Authentication auth) {
+        Socio yo = socioService.buscarPorUsername(auth.getName());
+        return socioService.listarGarages(yo.getDni());
+    }
 }

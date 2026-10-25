@@ -1,140 +1,67 @@
 package com.sherlockhomes.controllers;
 
-import com.sherlockhomes.EntradaCons;
+import com.sherlockhomes.dto.SocioRequest;
+import com.sherlockhomes.models.Garage;
 import com.sherlockhomes.models.Socio;
-import com.sherlockhomes.SocioRepositoryFile;
-import com.sherlockhomes.models.Usuario;
-import com.sherlockhomes.views.admin.VistaAdminSocios;
+import com.sherlockhomes.models.Vehiculo;
+import com.sherlockhomes.services.SocioService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
+@RestController
+@RequestMapping("/api/admin/socios")
+public class ControllerAdminSocio {
 
-public class ControllerAdminSocio implements ControllerAdminMenu<Usuario> {
-    
-    protected SocioRepositoryFile associatedRepository;
-    private VistaAdminSocios vistaGestionSocios;
-    private int accion;
-    
-    public ControllerAdminSocio(){
-        associatedRepository = new SocioRepositoryFile();
-        vistaGestionSocios = new VistaAdminSocios();
-    }
-    
-    @Override
-    public void iniciar(Usuario u){
-        do{
-            vistaGestionSocios.menu();
-            accion = EntradaCons.ingresaInt();
-            ejecutar(u);
-        } while(accion == -1);
-    }
-    
-    @Override
-    public void ejecutar(Usuario usuarioLogueado) {
-        switch (accion) {
-            case 1 -> registrar();
-            case 2 -> modificar();
-            case 3 -> eliminar();
-            case 4 -> listarSocioVehiculos();
-            case 5 -> listarSocioGarages();
-            case 6 -> associatedRepository.listarAll();
-            case 0 -> {}
-            default -> vistaGestionSocios.noReconocida();
-        }
-    }
-    
-    public void registrar() {
-        System.out.println("=== Registro de nuevo Socio ===");
+    private final SocioService socioService;
 
-        System.out.print("Ingrese Nombre: ");
-        String nombre = EntradaCons.ingresaString();
-
-        System.out.print("Ingrese DNI: ");
-        int DNI = EntradaCons.ingresaInt();
-        
-        if(associatedRepository.existePorValor(DNI,0)){
-            System.out.println("Socio ya existe.");
-            return;
-        }
-
-        System.out.print("Ingrese dirección: ");
-        String direccion = EntradaCons.ingresaString();
-
-        System.out.print("Ingrese teléfono: ");
-        String telefono = EntradaCons.ingresaString();
-
-        try{ 
-            Socio aux = new Socio(nombre, DNI, direccion, telefono);
-            associatedRepository.crear(aux);
-            System.out.println("Se agregó el socio exitosamente.");
-            associatedRepository.mostrarPorValor(DNI,0);
-        } catch(Exception e) {
-            System.out.println("Fallo registro de socio." + e.getMessage());
-        }
+    public ControllerAdminSocio(SocioService socioService) {
+        this.socioService = socioService;
     }
 
-    public void modificar() {
-        System.out.println("=== Modificar Socio ===");
-                
-        System.out.print("Ingrese DNI: ");
-        int DNI = EntradaCons.ingresaInt();
-        EntradaCons.ingresaString();
-
-        if(!associatedRepository.existePorValor(DNI,0)){
-            System.out.println("Socio no encontrado.");
-            return;
-        }
-
-        System.out.println("Modificar direccion o vacio: ");
-        String direccion = EntradaCons.ingresaString();
-
-        System.out.println("Modificar telefono o vacio: ");
-        String telefono = EntradaCons.ingresaString();
-        
-        Socio aux = new Socio("", DNI, direccion, telefono);
-        associatedRepository.modificarPorValor(DNI,0, aux);
-
-        System.out.println("Se modificó el socio DNI " + DNI + ".");
+    @PostMapping("/registrar")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Socio crearSocio(@Valid @RequestBody SocioRequest socio) {
+        return socioService.crearSocio(socio);
     }
 
-    public void eliminar() {
-        System.out.println("=== Eliminar Socio ===");
-        
-        int DNI;
-
-        System.out.println("Ingrese DNI: ");
-        DNI = EntradaCons.ingresaInt();
-        EntradaCons.ingresaString();
-        
-        if(!associatedRepository.existePorValor(DNI,0)){
-            System.out.println("Socio no encontrado.");
-            return;
-        }
-
-        associatedRepository.eliminarPorValor(DNI,0);
+    @GetMapping("/mostrar/{dni}")
+    public Socio obtenerSocio(@PathVariable Integer dni) {
+        return socioService.buscarPorDni(dni);
     }
 
-    private void listarSocioVehiculos() {
-        System.out.println("=== Muestra vehiculos de un socio ===");
-        System.out.print("Ingrese DNI: ");
-        int DNI = EntradaCons.ingresaInt();
-
-        if(!associatedRepository.existePorValor(DNI,0)){
-            System.out.println("Socio no encontrado.");
-            return;
-        }
-        
-        associatedRepository.listarSocioVehiculos(associatedRepository.buscarPorValor(DNI,0));
+    @GetMapping("/listar")
+    public List<Socio> listarSocios() {
+        return socioService.listarSocios();
     }
-    
-    private void listarSocioGarages() {
-        System.out.println("=== Muestra garages de un socio ===");
-        System.out.print("Ingrese DNI: ");
-        int DNI = EntradaCons.ingresaInt();
 
-        if(!associatedRepository.existePorValor(DNI,0)){
-            System.out.println("Socio no encontrado.");
-            return;
-        }
-        
-        associatedRepository.listarSocioGarages(associatedRepository.buscarPorValor(DNI,0));
+    @PutMapping("/actualizar/{dni}")
+    public Socio actualizarSocio(@PathVariable Integer dni, @Valid @RequestBody SocioRequest socio) {
+        return socioService.actualizarSocio(dni, socio);
+    }
+
+    @DeleteMapping("/eliminar/{dni}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarSocio(@PathVariable Integer dni) {
+        socioService.eliminarSocio(dni);
+    }
+
+    @GetMapping("/listarVehiculos/{dni}")
+    public List<Vehiculo> listarSocioVehiculos(@PathVariable Integer dni) {
+        return socioService.listarVehiculos(dni);
+    }
+
+    @GetMapping("/listarGarages/{dni}")
+    public List<Garage> listarSocioGarages(@PathVariable Integer dni) {
+        return socioService.listarGarages(dni);
     }
 }

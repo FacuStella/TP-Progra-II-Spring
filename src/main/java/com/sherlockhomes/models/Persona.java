@@ -1,34 +1,63 @@
 package com.sherlockhomes.models;
 
-import java.io.Serializable;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
-public abstract class Persona implements Serializable {
-    private static final long serialVersionUID = 1L; 
-    protected String nombre;
-    protected int DNI;
-    protected String direccion;
-    protected String telefono;
-    
+@Getter
+@Setter
+@MappedSuperclass
+public abstract class Persona {
+
+    @NotBlank
+    @Column(nullable = false)
+    private String nombre;
+
+    @NotNull
+    @Column(nullable = false, unique = true)
+    private Integer dni;
+
+    @Column
+    private String direccion;
+
+    @Column
+    private String telefono;
+
     public Persona() {
     }
-    
-    public Persona(String nombre, int DNI, String direccion, String telefono){
+
+    public Persona(String nombre, Integer dni, String direccion, String telefono) {
         this.nombre = nombre;
-        this.DNI = DNI;
+        this.dni = dni;
         this.direccion = direccion;
         this.telefono = telefono;
     }
-    
-    public int getDNI() {
-        return DNI;
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 
     public String getNombre() {
         return nombre;
     }
 
-    public String getTelefono() {
-        return telefono;
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Integer getDni() {
+        return dni;
+    }
+
+    public void setDni(Integer dni) {
+        this.dni = dni;
     }
 
     public String getDireccion() {
@@ -38,8 +67,6 @@ public abstract class Persona implements Serializable {
     public void setDireccion(String direccion) {
         this.direccion = direccion;
     }
-
-    public void setTelefono(String telefono) {
-       this.telefono = telefono;
-    }
+    
+    
 }

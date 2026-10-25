@@ -1,110 +1,79 @@
 package com.sherlockhomes.controllers;
 
-import com.sherlockhomes.EmpleadoRepositoryFile;
-import com.sherlockhomes.EntradaCons;
-import com.sherlockhomes.models.Usuario;
-import com.sherlockhomes.VehiculoRepositoryFile;
-import com.sherlockhomes.ZonaRepositoryFile;
-import com.sherlockhomes.views.admin.VistaAdminZonas;
+import com.sherlockhomes.dto.ZonaRequest;
+import com.sherlockhomes.models.Empleado;
+import com.sherlockhomes.models.Garage;
+import com.sherlockhomes.models.Zona;
+import com.sherlockhomes.services.ZonaService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ControllerAdminZona implements ControllerAdminMenu<Usuario>{
-    
-    ZonaRepositoryFile zoneRepository;
-    VehiculoRepositoryFile vehicleRepository;
-    EmpleadoRepositoryFile employeeRepository;
-    private VistaAdminZonas vistaAdminZonas;
-    private int accion;
-    
-    public ControllerAdminZona() {
-        zoneRepository = new ZonaRepositoryFile();
-        vehicleRepository = new VehiculoRepositoryFile();
-        employeeRepository = new EmpleadoRepositoryFile();
-        vistaAdminZonas = new VistaAdminZonas();
-    }
-    
-    @Override
-    public void iniciar(Usuario u){
-        do{
-            vistaAdminZonas.menu();
-            accion = EntradaCons.ingresaInt();
-            ejecutar(u);
-        } while(accion == -1);
+@RestController
+@RequestMapping("/api/admin/zonas")
+public class ControllerAdminZona {
+
+    private final ZonaService zonaService;
+
+    public ControllerAdminZona(ZonaService zonaService) {
+        this.zonaService = zonaService;
     }
 
-    @Override
-    public void ejecutar(Usuario usuario) {
-        switch (accion) {
-            case 1 -> registrarZona(); 
-            case 2 -> asignarEmpleado();
-            case 3 -> quitarEmpleado();
-            case 4 -> zoneRepository.listarAll();
-            case 0 -> {}
-            default -> vistaAdminZonas.noReconocida();
-        }
+    @PostMapping("/registrar")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Zona registrarZona(@Valid @RequestBody ZonaRequest zona) {
+        return zonaService.crearZona(zona);
     }
 
-    private void registrarZona() {
-        System.out.println("=== Registro de Zona ===");
-        
-        System.out.print("Ingrese zona: ");
-        String letra = EntradaCons.ingresaString();
-
-        if(zoneRepository.existePorValorS(letra,0)){
-            System.out.println("La zona ya existe.");
-            return;
-        }
+    @GetMapping("/mostrar/{letra}")
+    public Zona obtenerZona(@PathVariable String letra) {
+        return zonaService.buscarPorLetra(letra);
     }
 
-
-    private void asignarEmpleado() {
-        System.out.println("=== Asignar zona a empleado ===");
-                
-        System.out.print("Ingrese letra de la zona que quiere asignar: ");
-        String letra = EntradaCons.ingresaString();
-
-        if(!zoneRepository.existePorValorS(letra,0)){
-            System.out.println("No existe la zona con letra " + letra + ".");
-            return;
-        }
-        
-        System.out.println("Ingrese codigo de empleado a asignar: ");
-        int codigo = EntradaCons.ingresaInt();
-
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        employeeRepository.asignarEmpleadoZona(codigo, zoneRepository.buscarPorValorS(letra,0));
-        zoneRepository.asignarZonaEmpleado(letra, codigo);
-
-        System.out.println("Empleado asignado exitosamente.");
+    @GetMapping("/listar")
+    public List<Zona> listarZonas() {
+        return zonaService.listarZonas();
     }
 
-    private void quitarEmpleado() {
-        System.out.println("=== Quitar de zona a empleado ===");
-        
-        System.out.println("Ingrese codigo de empleado: ");
-        int codigo = EntradaCons.ingresaInt();
+    @PutMapping("/actualizar/{letra}")
+    public Zona actualizarZona(@PathVariable String letra, @Valid @RequestBody ZonaRequest zona) {
+        return zonaService.actualizarZona(letra, zona);
+    }
 
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        employeeRepository.listarEmpleadoZonas(employeeRepository.buscarPorValor(codigo,2));
-                
-        System.out.print("Ingrese letra de la zona que quiere quitar: ");
-        String letra = EntradaCons.ingresaString();
+    @DeleteMapping("/eliminar/{letra}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarZona(@PathVariable String letra) {
+        zonaService.eliminarZona(letra);
+    }
 
-        if(!zoneRepository.existePorValorS(letra,0)){
-            System.out.println("No existe la zona con letra " + letra + ".");
-            return;
-        }
-        
-        zoneRepository.quitarZonaEmpleado(letra, employeeRepository.buscarPorValor(codigo,2));
-        employeeRepository.quitarEmpleadoZona(codigo, zoneRepository.buscarPorValorS(letra,0));
-        
-        System.out.println("Empleado asignado exitosamente.");
+    @PostMapping("/asignarEmpleado/{letra}/{dniEmpleado}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void asignarEmpleado(@PathVariable String letra, @PathVariable Integer dniEmpleado) {
+        zonaService.asignarEmpleado(letra, dniEmpleado);
+    }
+
+    @DeleteMapping("/quitarEmpleado/{letra}/{dniEmpleado}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void quitarEmpleado(@PathVariable String letra, @PathVariable Integer dniEmpleado) {
+        zonaService.quitarEmpleado(letra, dniEmpleado);
+    }
+
+    @GetMapping("/listarGarages/{letra}")
+    public List<Garage> listarGarages(@PathVariable String letra) {
+        return zonaService.listarGarages(letra);
+    }
+
+    @GetMapping("/listarEmpleados/{letra}")
+    public List<Empleado> listarEmpleados(@PathVariable String letra) {
+        return zonaService.listarEmpleados(letra);
     }
 }

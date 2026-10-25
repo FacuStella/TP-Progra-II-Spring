@@ -1,272 +1,89 @@
 package com.sherlockhomes.controllers;
 
+import com.sherlockhomes.dto.EmpleadoRequest;
 import com.sherlockhomes.models.Empleado;
-import com.sherlockhomes.EmpleadoRepositoryFile;
-import com.sherlockhomes.EntradaCons;
-import com.sherlockhomes.models.Usuario;
-import com.sherlockhomes.VehiculoRepositoryFile;
-import com.sherlockhomes.ZonaRepositoryFile;
-import com.sherlockhomes.views.admin.VistaAdminEmpleados;
+import com.sherlockhomes.models.Vehiculo;
+import com.sherlockhomes.models.Zona;
+import com.sherlockhomes.services.EmpleadoService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ControllerAdminEmpleado implements ControllerAdminMenu<Usuario> {
-    
-    protected EmpleadoRepositoryFile employeeRepository;
-    protected VehiculoRepositoryFile vehicleRepository;
-    protected ZonaRepositoryFile zoneRepository;
-    protected VistaAdminEmpleados vistaAdminEmpleados;
-    protected int accion;
-    protected int buscarPor = 0;
-    protected int valor = -1;
-    
-    public ControllerAdminEmpleado(){
-        employeeRepository = new EmpleadoRepositoryFile();
-        vehicleRepository = new VehiculoRepositoryFile();
-        zoneRepository = new ZonaRepositoryFile();
-        vistaAdminEmpleados = new VistaAdminEmpleados();
-    }
-    
-    @Override
-    public void iniciar(Usuario u){
-        do{
-            vistaAdminEmpleados.menu();
-            accion = EntradaCons.ingresaInt();
-            ejecutar(u);
-        } while(accion == -1);
-    }
-    
-    @Override
-    public void ejecutar(Usuario usuarioLogueado) {
-        switch (accion) {
-            case 1 -> registrarEmpleado();
-            case 2 -> modificarEmpleado();
-            case 3 -> eliminarEmpleado();
-            case 4 -> asignarEmpleadoZona();
-            case 5 -> quitarEmpleadoZona();
-            case 6 -> listarEmpleadoZonas();
-            case 7 -> asignarVehiculoEmpleado();
-            case 8 -> quitarEmpleadoVehiculo();
-            case 9 -> listarEmpleadoVehiculos();
-            case 10 -> employeeRepository.listarAll();
-            case 0 -> {}
-            default -> vistaAdminEmpleados.noReconocida();
-        }
+@RestController
+@RequestMapping("/api/admin/empleados")
+public class ControllerAdminEmpleado {
+
+    private final EmpleadoService empleadoService;
+
+    public ControllerAdminEmpleado(EmpleadoService empleadoService) {
+        this.empleadoService = empleadoService;
     }
 
-    public void menuBusquedaEmpleado() {
-        System.out.println("Ingrese clave por la que desea buscar al empleado.");
-        System.out.println("1. Por DNI");
-        System.out.println("2. Por codigo");
-        buscarPor = EntradaCons.ingresaInt();
-        
-        switch(buscarPor){
-            case 1 -> System.out.println("Ingrese DNI: ");
-            case 2 -> System.out.println("Ingrese codigo: ");
-            default -> {return;}
-        }
-        
-        valor = EntradaCons.ingresaInt();
+    @PostMapping("/registrar")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Empleado crearEmpleado(@Valid @RequestBody EmpleadoRequest empleado) {
+        return empleadoService.crearEmpleado(empleado);
     }
 
-    private void registrarEmpleado() {
-        System.out.println("=== Registro de nuevo Empleado ===");
-
-        System.out.print("Ingrese Nombre: ");
-        String nombre = EntradaCons.ingresaString();
-
-        System.out.print("Ingrese DNI: ");
-        int DNI = EntradaCons.ingresaInt();
-
-        if(employeeRepository.existePorValor(DNI,1)){
-            System.out.println("Ya existe empleado con DNI " + DNI + ".");
-            return;
-        }
-
-        System.out.print("Ingrese direccion: ");
-        String direccion = EntradaCons.ingresaString();
-
-        System.out.print("Ingrese Telefono: ");
-        String telefono = EntradaCons.ingresaString();
-
-        System.out.print("Ingrese Especialidad: ");
-        String especialidad = EntradaCons.ingresaString();
-        
-        try{
-            Empleado aux = new Empleado(nombre, DNI, direccion, telefono, especialidad);
-            employeeRepository.crear(aux);
-            System.out.println("Se agregó el empleado exitosamente.");
-            employeeRepository.mostrarPorValor(DNI,1);
-        } catch(Exception e) {
-            System.out.println("Fallo registro de empleado." + e.getMessage());
-        }
+    @GetMapping("/mostrar/{dni}")
+    public Empleado obtenerEmpleado(@PathVariable Integer dni) {
+        return empleadoService.buscarPorDni(dni);
     }
 
-    private void modificarEmpleado() {
-        System.out.println("=== Modificar Empleado ===");
-                
-        menuBusquedaEmpleado();
-
-        if(!employeeRepository.existePorValor(valor,buscarPor)){
-            System.out.println("Empleado no encontrado.");
-            return;
-        }
-
-        System.out.print("Modificar direccion o vacio: ");
-        String direccion = EntradaCons.ingresaString();
-
-        System.out.print("Modificar telefono o vacio: ");
-        String telefono = EntradaCons.ingresaString();
-
-        System.out.print("Modificar especialidad o vacio: ");
-        String especialidad = EntradaCons.ingresaString();
-        
-        Empleado empleado = new Empleado("", 0, direccion, telefono, especialidad);
-        employeeRepository.modificarPorValor(valor, buscarPor, empleado);
-        System.out.println("Se modificó existosamente el empleado.");
-        employeeRepository.mostrarPorValor(valor,buscarPor);
+    @GetMapping("/listar")
+    public List<Empleado> listarEmpleados() {
+        return empleadoService.listarEmpleados();
     }
 
-    private void eliminarEmpleado() {
-        System.out.println("=== Eliminar Empleado ===");
-        
-        menuBusquedaEmpleado();
-
-        if(employeeRepository.existePorValor(valor, buscarPor)){
-            employeeRepository.eliminarPorValor(valor, buscarPor);
-        } else {
-            System.out.println("No existe el empleado ingresado.");
-        }
-        System.out.println("Se eliminó el empleado exitosamente.");
+    @PutMapping("/actualizar/{dni}")
+    public Empleado actualizarEmpleado(@PathVariable Integer dni, @Valid @RequestBody EmpleadoRequest empleado) {
+        return empleadoService.actualizarEmpleado(dni, empleado);
     }
 
-    private void asignarEmpleadoZona() {
-        System.out.println("=== Asignar zona a empleado ===");
-                
-        System.out.print("Ingrese letra de la zona que quiere asignar: ");
-        String letra = EntradaCons.ingresaString();
-
-        if(!zoneRepository.existePorValorS(letra,0)){
-            System.out.println("No existe la zona con letra " + letra + ".");
-            return;
-        }
-        
-        System.out.println("Ingrese codigo de empleado a asignar: ");
-        int codigo = EntradaCons.ingresaInt();
-
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        zoneRepository.asignarZonaEmpleado(letra, codigo);
-        employeeRepository.asignarEmpleadoZona(codigo, zoneRepository.buscarPorValorS(letra,0));
-        
-        System.out.println("Empleado asignado exitosamente.");
+    @DeleteMapping("/eliminar/{dni}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarEmpleado(@PathVariable Integer dni) {
+        empleadoService.eliminarEmpleado(dni);
     }
 
-    private void asignarVehiculoEmpleado() {
-        System.out.println("=== Asignar vehículo a empleado ===");
-        
-        employeeRepository.listarAll();
-        
-        System.out.println("Ingrese codigo: ");
-        int codigo = EntradaCons.ingresaInt();
-
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        vehicleRepository.listarAll();
-        
-        System.out.println("Ingrese patente: ");
-        String patente = EntradaCons.ingresaString();
-
-        if(!vehicleRepository.existePorValorS(patente,0)){
-            System.out.println("El vehiculo no existe.");
-            return;
-        }
-        
-        if(vehicleRepository.tieneEmpleadoAsignado(patente)){
-            vehicleRepository.quitarVehiculoEmpleado(patente);
-        }
-        
-        vehicleRepository.asignarVehiculoEmpleado(patente,employeeRepository.buscarPorValor(codigo,2));
-        employeeRepository.asignarEmpleadoVehiculo(codigo,vehicleRepository.buscarPorValorS(patente,0));
-        // falta modificar el objeto VehiculoAsignado de Garage
+    @PostMapping("/asignarZona/{dni}/{letra}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void asignarEmpleadoZona(@PathVariable Integer dni, @PathVariable String letra) {
+        empleadoService.asignarZona(dni, letra);
     }
 
-    private void listarEmpleadoVehiculos() {
-        menuBusquedaEmpleado();
-
-        if(employeeRepository.existePorValor(valor,buscarPor)){
-            employeeRepository.listarEmpleadoVehiculos(employeeRepository.buscarPorValor(valor,buscarPor));
-        } else {
-            System.out.println("No existe el empleado ingresado.");
-        }
-    }
-    
-    private void listarEmpleadoZonas() {
-        menuBusquedaEmpleado();
-        
-        if(employeeRepository.existePorValor(valor,buscarPor)){
-            employeeRepository.listarEmpleadoZonas(employeeRepository.buscarPorValor(valor,buscarPor));
-        } else {
-            System.out.println("No existe el empleado ingresado.");
-        }
+    @DeleteMapping("/quitarZona/{dni}/{letra}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void quitarEmpleadoZona(@PathVariable Integer dni, @PathVariable String letra) {
+        empleadoService.quitarZona(dni, letra);
     }
 
-    private void quitarEmpleadoZona() {
-        System.out.println("=== Quitar de zona a empleado ===");
-        
-        System.out.println("Ingrese codigo de empleado: ");
-        int codigo = EntradaCons.ingresaInt();
-
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        employeeRepository.listarEmpleadoZonas(employeeRepository.buscarPorValor(codigo,2));
-                
-        System.out.print("Ingrese letra de la zona que quiere quitar: ");
-        String letra = EntradaCons.ingresaString();
-
-        if(!zoneRepository.existePorValorS(letra,0)){
-            System.out.println("No existe la zona con letra " + letra + ".");
-            return;
-        }
-        
-        zoneRepository.quitarZonaEmpleado(letra, employeeRepository.buscarPorValor(codigo,2));
-        employeeRepository.quitarEmpleadoZona(codigo, zoneRepository.buscarPorValorS(letra,0));
-        
-        System.out.println("Empleado desasignado exitosamente.");
+    @PostMapping("/asignarVehiculo/{dni}/{patente}")
+    public Vehiculo asignarVehiculoEmpleado(@PathVariable Integer dni, @PathVariable String patente) {
+        return empleadoService.asignarVehiculo(dni, patente);
     }
 
-    private void quitarEmpleadoVehiculo() {
-        System.out.println("=== Quitar vehiculo a empleado ===");
-        
-        System.out.println("Ingrese codigo de empleado: ");
-        int codigo = EntradaCons.ingresaInt();
-
-        if(!employeeRepository.existePorValor(codigo,2)){
-            System.out.println("El empleado no existe.");
-            return;
-        }
-        
-        employeeRepository.listarEmpleadoVehiculos(employeeRepository.buscarPorValor(codigo,2));
-                
-        System.out.print("Ingrese patente a quitar: ");
-        String patente = EntradaCons.ingresaString();
-
-        if(!vehicleRepository.existePorValorS(patente,0)){
-            System.out.println("No existe vehiculo.");
-            return;
-        }
-        
-        vehicleRepository.quitarVehiculoEmpleado(patente);
-        employeeRepository.quitarEmpleadoVehiculo(codigo, vehicleRepository.buscarPorValorS(patente,0));
-        
-        System.out.println("Vehiculo desasignado exitosamente.");
+    @DeleteMapping("/quitarVehiculo/{dni}/{patente}")
+    public Vehiculo quitarEmpleadoVehiculo(@PathVariable Integer dni, @PathVariable String patente) {
+        return empleadoService.quitarVehiculo(dni, patente);
     }
-     
+
+    @GetMapping("/listarVehiculos/{dni}")
+    public List<Vehiculo> listarEmpleadoVehiculos(@PathVariable Integer dni) {
+        return empleadoService.listarVehiculos(dni);
+    }
+
+    @GetMapping("/listarZonas/{dni}")
+    public List<Zona> listarEmpleadoZonas(@PathVariable Integer dni) {
+        return empleadoService.listarZonas(dni);
+    }
 }

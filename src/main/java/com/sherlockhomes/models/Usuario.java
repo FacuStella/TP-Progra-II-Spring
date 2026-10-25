@@ -1,53 +1,74 @@
 package com.sherlockhomes.models;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sherlockhomes.TipoUsuario;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public class Usuario extends Persona implements Serializable {
-    private static final long serialVersionUID = 1L; 
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
 
-    protected int ID;
-    protected String username;
-    protected String password;
-    protected TipoUsuario tipoUsuario;
-    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "usuario_id")
+    private Long id;
+
+    @NotBlank
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    /** Hash BCrypt. Nunca se expone en las respuestas JSON. */
+    @JsonIgnore
+    @NotBlank
+    @Column(nullable = false)
+    private String password;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoUsuario tipoUsuario;
+
     public Usuario() {
     }
-    
-    public Usuario(String nombre, int DNI, String direccion, String telefono) {
-        super(nombre, DNI, direccion, telefono);
-    }
 
-    public Usuario(int id, String nombre, int DNI, String direccion, String telefono, String username, String password, TipoUsuario tipoUsuario) {
-        super(nombre, DNI, direccion, telefono);
-        this.ID = id;
+    public Usuario(String username, String password, TipoUsuario tipoUsuario) {
         this.username = username;
         this.password = password;
         this.tipoUsuario = tipoUsuario;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public boolean validarPassword(String password) {
-        return this.password.equals(password);
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public TipoUsuario getTipoUsuario() {
         return tipoUsuario;
     }
+
+    public void setTipoUsuario(TipoUsuario tipoUsuario) {
+        this.tipoUsuario = tipoUsuario;
+    }
     
-    public String toCSV() {
-        return ID + "," + username + "," + password + "," + tipoUsuario;
-    }
-
-    public int getId() {
-        return ID;
-    }
-
-    public String getUserName() {
-        return username;
-    }
-
+    
 }

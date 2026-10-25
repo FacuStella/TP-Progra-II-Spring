@@ -1,74 +1,79 @@
 package com.sherlockhomes.models;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import static com.sherlockhomes.TipoUsuario.EMPLEADO;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
-public class Empleado extends Usuario implements Serializable {
-    private static final long serialVersionUID = 1L; 
-    
-    protected int codigo;
+@Getter
+@Setter
+@Entity
+@Table(name = "empleados")
+public class Empleado extends Persona {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "empleado_id")
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
+    private Usuario usuario;
+
+    @NotNull
+    @Column(nullable = false, unique = true)
+    protected Integer codigo;
+
+    @NotBlank
+    @Column(nullable = false)
     protected String especialidad;
-    protected ArrayList<Zona> zonasAsignadas;
-    protected ArrayList<Vehiculo> vehiculosAsignados;
-    
+
     public Empleado() {
     }
-    
-    public Empleado(String nombre, int DNI, String direccion, String telefono, String especialidad) {
-        super(nombre, DNI, direccion, telefono);
-        this.especialidad = especialidad;
-    }
 
-    public Empleado(int id, int codigo, String nombre, int DNI, String direccion, String telefono, String especialidad) {
-        super(id, nombre, DNI, direccion, telefono, nombre+"Emp",String.format("%04d", DNI % 10000), EMPLEADO);
+    public Empleado(String nombre, Integer dni, String direccion, String telefono,
+                    Integer codigo, String especialidad) {
+        super(nombre, dni, direccion, telefono);
         this.codigo = codigo;
         this.especialidad = especialidad;
-        this.zonasAsignadas = new ArrayList();
     }
 
-    public int getCodigo() {
-        return codigo; 
+    public Long getId() {
+        return id;
     }
-    
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public Integer getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(Integer codigo) {
+        this.codigo = codigo;
+    }
+
     public String getEspecialidad() {
-        return especialidad; 
+        return especialidad;
     }
-    
+
     public void setEspecialidad(String especialidad) {
         this.especialidad = especialidad;
     }
     
-    public ArrayList<Zona> getZonasAsignadas() {
-        return (zonasAsignadas.isEmpty()) ? null : new ArrayList<Zona>(zonasAsignadas); 
-    }
-    
-    public void asignarZona(Zona zona) {
-        zonasAsignadas.add(zona);
-    }
-    
-    public void quitarZona(Zona zona) {
-        zonasAsignadas.remove(zona);
-    }
-    
-    public void asignarZonas(ArrayList<Zona> zonas) {
-        this.zonasAsignadas = zonas;
-    }
-    
-    public ArrayList<Vehiculo> getVehiculosAsignados() {
-        return (vehiculosAsignados.isEmpty()) ? null : new ArrayList<Vehiculo>(vehiculosAsignados); 
-    }
-    
-    public void asignarVehiculo(Vehiculo vehiculo) {
-        vehiculosAsignados.add(vehiculo);
-    }
-    
-    public void quitarVehiculo(Vehiculo vehiculo) {
-        vehiculosAsignados.remove(vehiculo);
-    }
-    
-    public void asignarVehiculos(ArrayList<Vehiculo> vehiculos) {
-        this.vehiculosAsignados = vehiculos;
-    }
     
 }

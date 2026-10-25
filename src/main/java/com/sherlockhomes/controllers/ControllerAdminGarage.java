@@ -1,158 +1,81 @@
 package com.sherlockhomes.controllers;
 
-import com.sherlockhomes.EntradaCons;
+import com.sherlockhomes.dto.GarageRequest;
 import com.sherlockhomes.models.Garage;
-import com.sherlockhomes.GarageRepositoryFile;
-import com.sherlockhomes.SocioRepositoryFile;
-import com.sherlockhomes.models.Usuario;
-import com.sherlockhomes.VehiculoRepositoryFile;
-import com.sherlockhomes.ZonaRepositoryFile;
-import com.sherlockhomes.views.admin.VistaAdminGarages;
+import com.sherlockhomes.models.Vehiculo;
+import com.sherlockhomes.services.GarageService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ControllerAdminGarage implements ControllerAdminMenu<Usuario> {
-    
-    protected GarageRepositoryFile garageRepository;
-    protected VehiculoRepositoryFile vehicleRepository;
-    protected SocioRepositoryFile asocciatedRepository;
-    protected ZonaRepositoryFile zoneRepository;
-    protected VistaAdminGarages vistaAdminGarages;
-    protected int accion;
-    
-    public ControllerAdminGarage(){
-        garageRepository = new GarageRepositoryFile();
-        vehicleRepository = new VehiculoRepositoryFile();
-        asocciatedRepository = new SocioRepositoryFile();
-        zoneRepository = new ZonaRepositoryFile();
-        vistaAdminGarages = new VistaAdminGarages();
-    }
-    
-    @Override
-    public void iniciar(Usuario u){
-        do{
-            vistaAdminGarages.menu();
-            accion = EntradaCons.ingresaInt();
-            ejecutar(u);
-        } while(accion == -1);
+@RestController
+@RequestMapping("/api/admin/garages")
+public class ControllerAdminGarage {
+
+    private final GarageService garageService;
+
+    public ControllerAdminGarage(GarageService garageService) {
+        this.garageService = garageService;
     }
 
-
-    @Override
-    public void ejecutar(Usuario usuario) {
-        switch (accion) {
-            case 1 -> registrarGarage(); 
-            case 2 -> asignarGarageVehiculo();
-            case 3 -> quitarGarageVehiculo();
-            case 4 -> comprarGarage();
-            case 5 -> garageRepository.listarAll();
-            case 0 -> {}
-            default -> vistaAdminGarages.noReconocida();
-        }
+    @PostMapping("/registrar")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Garage crearGarage(@Valid @RequestBody GarageRequest garage) {
+        return garageService.crearGarage(garage);
     }
 
-    private void registrarGarage() {
-        System.out.println("=== Registro de garage ===");
-        
-        System.out.print("Ingrese zona donde se agrega el garage: ");
-        String letra = EntradaCons.ingresaString();
-
-        if(!zoneRepository.existePorValorS(letra,0)){
-            System.out.println("No existe la zona.");
-            return;
-        }
-        
-        try{
-            Garage garage = new Garage(zoneRepository.buscarPorValorS(letra,0)); 
-            garageRepository.crear(garage);
-            System.out.println("Se agregó el garage exitosamente.");
-            //garageRepository.mostrarGaragePorNumero(patente);
-        } catch(Exception e) {
-            System.out.println("Error inesperado al crear el garage" + e.getMessage());
-        }
+    @GetMapping("/mostrar/{numero}")
+    public Garage obtenerGarage(@PathVariable Integer numero) {
+        return garageService.buscarPorNumero(numero);
     }
 
-    private void quitarGarageVehiculo() {
-        System.out.println("=== Quitar garage a vehiculo ===");
-
-        System.out.println("Ingrese numero: ");
-        int numero = EntradaCons.ingresaInt();
-        
-        if(!garageRepository.existePorValor(numero,0)){
-            System.out.println("El garage no existe.");
-            return;
-        }
-        
-        if(!garageRepository.tieneVehiculoAsignado(numero)){
-            System.out.println("El garage no tiene vehiculo asignado.");
-            return;
-        }
-        
-        vehicleRepository.quitarGarageVehiculo(numero);
-        garageRepository.quitarGarageVehiculo(numero);  
+    @GetMapping("/listar")
+    public List<Garage> listarGarages() {
+        return garageService.listarGarages();
     }
 
-    private void asignarGarageVehiculo() {
-        System.out.println("=== Asignar garage a vehículo===");
-        
-        System.out.println("Ingrese numero gge: ");
-        int numero = EntradaCons.ingresaInt();
-        
-        if(!garageRepository.existePorValor(numero,0)){
-            System.out.println("El garage no existe.");
-            return;
-        }
-        
-        if(!garageRepository.tienePropietario(numero)){
-            System.out.println("El garage no tiene propietario, por tanto no puede asignarse.");
-            return;
-        }
-        
-        asocciatedRepository.listarSocioVehiculos(garageRepository.buscarPorValor(numero,0).getPropietario());
-        
-        System.out.println("Ingrese patente: ");
-        String patente = EntradaCons.ingresaString();
-
-        if(!vehicleRepository.existePorValorS(patente,0)){
-            System.out.println("El vehiculo no existe.");
-            return;
-        }
-        
-        if(garageRepository.tieneVehiculoAsignado(numero)){
-            garageRepository.quitarGarageVehiculo(numero);
-        }
-        
-        if(vehicleRepository.tieneGarageAsignado(patente)){
-            garageRepository.quitarVehiculoGarage(patente);
-        }
-        
-        garageRepository.asignarGarageVehiculo(numero,patente);
-        vehicleRepository.asignarVehiculoGarage(patente,numero);
+    @PutMapping("/actualizar/{numero}")
+    public Garage actualizarGarage(@PathVariable Integer numero, @Valid @RequestBody GarageRequest garage) {
+        return garageService.actualizarGarage(numero, garage);
     }
 
-    private void comprarGarage() {
-        System.out.println("=== Venta de garage ===");
-        
-        System.out.println("Ingrese numero gge: ");
-        int numero = EntradaCons.ingresaInt();
-        
-        if(!garageRepository.existePorValor(numero,0)){
-            System.out.println("El garage no existe.");
-            return;
-        }
-        
-        if(garageRepository.tienePropietario(numero)){
-            System.out.println("El garage tiene propietario, por tanto no puede comprarse.");
-            return;
-        }
-        
-        System.out.println("Ingrese DNI del socio que compra: ");
-        int DNI = EntradaCons.ingresaInt();
-        
-        if(!asocciatedRepository.existePorValor(DNI,0)){
-            System.out.println("El socio no existe.");
-            return;
-        }
-        
-        asocciatedRepository.comprarGarage(DNI,garageRepository.buscarPorValor(numero,0));
-        garageRepository.comprarGarage(numero,asocciatedRepository.buscarPorValor(DNI,0));
+    @DeleteMapping("/eliminar/{numero}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarGarage(@PathVariable Integer numero) {
+        garageService.eliminarGarage(numero);
+    }
+
+    @PutMapping("/asignarZona/{numero}/{letra}")
+    public Garage asignarGarageZona(@PathVariable Integer numero, @PathVariable String letra) {
+        return garageService.asignarZona(numero, letra);
+    }
+
+    @PutMapping("/asignarSocio/{numero}/{dniSocio}")
+    public Garage asignarGarageSocio(@PathVariable Integer numero, @PathVariable Integer dniSocio) {
+        return garageService.asignarSocio(numero, dniSocio);
+    }
+
+    @DeleteMapping("/quitarSocio/{numero}")
+    public Garage quitarGarageSocio(@PathVariable Integer numero) {
+        return garageService.quitarSocio(numero);
+    }
+
+    @PostMapping("/asignarVehiculo/{numero}/{patente}")
+    public Vehiculo asignarVehiculoGarage(@PathVariable Integer numero, @PathVariable String patente) {
+        return garageService.asignarVehiculo(numero, patente);
+    }
+
+    @DeleteMapping("/quitarVehiculo/{numero}")
+    public Vehiculo quitarGarageVehiculo(@PathVariable Integer numero) {
+        return garageService.quitarVehiculo(numero);
     }
 }

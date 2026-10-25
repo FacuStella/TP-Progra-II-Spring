@@ -1,37 +1,42 @@
 package com.sherlockhomes.controllers;
 
-import com.sherlockhomes.views.empleado.VistaEmpleado;
 import com.sherlockhomes.models.Empleado;
-import com.sherlockhomes.EmpleadoRepositoryFile;
-import com.sherlockhomes.EntradaCons;
+import com.sherlockhomes.models.Garage;
+import com.sherlockhomes.models.Vehiculo;
+import com.sherlockhomes.models.Zona;
+import com.sherlockhomes.services.EmpleadoService;
+import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ControllerEmpleado implements Controller<Empleado> {
-    
-    private EmpleadoRepositoryFile employeeRepository;
-    private VistaEmpleado vistaEmpleado;
-    private int accion;
-    
-    public ControllerEmpleado(){
-        employeeRepository = new EmpleadoRepositoryFile();
-        vistaEmpleado = new VistaEmpleado();
-    }
-    
-    @Override
-    public void iniciar(Empleado e){
-            do{
-                vistaEmpleado.menu();
-                accion = EntradaCons.ingresaInt();
-                ejecutar(e);
-            } while(accion != 0);
+/** Endpoints del empleado logueado: siempre trabajan sobre sus propios datos. */
+@RestController
+@RequestMapping("/api/empleado")
+public class ControllerEmpleado {
+
+    private final EmpleadoService empleadoService;
+
+    public ControllerEmpleado(EmpleadoService empleadoService) {
+        this.empleadoService = empleadoService;
     }
 
-    @Override
-    public void ejecutar(Empleado empleadoAux) {
-        switch (accion) {
-            case 1 -> employeeRepository.listarEmpleadoZonas(empleadoAux);
-            case 2 -> employeeRepository.listarEmpleadoVehiculos(empleadoAux);
-            case 0 -> vistaEmpleado.salir();
-            default -> vistaEmpleado.noReconocida();
-        }
-    }  
+    @GetMapping("/listarVehiculos")
+    public List<Vehiculo> listarEmpleadoVehiculos(Authentication auth) {
+        Empleado yo = empleadoService.buscarPorUsername(auth.getName());
+        return empleadoService.listarVehiculos(yo.getDni());
+    }
+
+    @GetMapping("/listarGarages")
+    public List<Garage> listarEmpleadoGarages(Authentication auth) {
+        Empleado yo = empleadoService.buscarPorUsername(auth.getName());
+        return empleadoService.listarGarages(yo.getDni());
+    }
+
+    @GetMapping("/listarZonas")
+    public List<Zona> listarEmpleadoZonas(Authentication auth) {
+        Empleado yo = empleadoService.buscarPorUsername(auth.getName());
+        return empleadoService.listarZonas(yo.getDni());
+    }
 }

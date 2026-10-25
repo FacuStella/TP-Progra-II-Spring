@@ -1,61 +1,71 @@
 package com.sherlockhomes.models;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import static com.sherlockhomes.TipoUsuario.SOCIO;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import java.time.LocalDate;
+import lombok.Getter;
+import lombok.Setter;
 
-public class Socio extends Usuario implements Serializable {
-    private static final long serialVersionUID = 1L; 
+@Getter
+@Setter
+@Entity
+@Table(name = "socios")
+public class Socio extends Persona {
 
-    protected Date fechaIngreso;
-    protected ArrayList<Vehiculo> vehiculos;
-    protected ArrayList<Garage> garages;
-    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "socio_id")
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
+    private Usuario usuario;
+
+    @Column(nullable = false)
+    protected LocalDate fechaIngreso;
+
     public Socio() {
     }
-    
-    public Socio(String nombre, int DNI, String direccion, String telefono) {
-        super(nombre, DNI, direccion, telefono);
+
+    public Socio(String nombre, Integer dni, String direccion, String telefono) {
+        super(nombre, dni, direccion, telefono);
+        this.fechaIngreso = LocalDate.now();
     }
 
-    public Socio(int id, String nombre, int DNI, String direccion, String telefono) {
-        super(id, nombre, DNI, direccion, telefono, nombre+"Soc",String.format("%04d", DNI % 10000), SOCIO);
-        this.fechaIngreso = Date.from(Instant.now());
-        this.vehiculos = new ArrayList();
-        this.garages = new ArrayList();
+    @PrePersist
+    void antesDeGuardar() {
+        if (fechaIngreso == null) {
+            fechaIngreso = LocalDate.now();
+        }
     }
 
-    public void agregarVehiculo(Vehiculo vehiculo) {
-        vehiculos.add(vehiculo);
+    public Long getId() {
+        return id;
     }
 
-    public void quitarVehiculo(Vehiculo vehiculo) {
-        vehiculos.remove(vehiculo);
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void comprarGarage(Garage garage) {
-        garages.add(garage);
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public ArrayList<Vehiculo> getVehiculos() {
-        return (vehiculos.isEmpty()) ? null : new ArrayList<Vehiculo>(vehiculos);
-    }
-
-    public ArrayList<Garage> getGarages() {
-        return (garages.isEmpty()) ? null : new ArrayList<Garage>(garages);
-    }   
-
-    public Date getFechaIngreso() {
+    public LocalDate getFechaIngreso() {
         return fechaIngreso;
     }
 
-    public void asignarVehiculos(ArrayList<Vehiculo> vehiculos) {
-        this.vehiculos = vehiculos;
+    public void setFechaIngreso(LocalDate fechaIngreso) {
+        this.fechaIngreso = fechaIngreso;
     }
-
-    public void asignarGarages(ArrayList<Garage> garages) {
-        this.garages = garages;
-    }
+    
+    
 }
